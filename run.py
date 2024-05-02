@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 # Step 2: Load and Prepare the Data
 print("Step 2: Loading and Preparing the Data")
 # Load your data
-data = pd.read_csv('elkindy.payments.csv')
+data = pd.read_csv('fake_payments.csv')
 data['createdAt'] = pd.to_datetime(data['createdAt'])
 data.set_index('createdAt', inplace=True)
 
@@ -28,7 +28,7 @@ data['day_of_week'] = data.index.dayofweek
 data['hour_of_day'] = data.index.hour
 
 # Optionally, drop unnecessary or redundant features
-data = data.drop(columns=['_id', 'student', 'flouciPaymentId'])
+# data = data.drop(columns=['_id', 'student', 'flouciPaymentId'])
 
 
 # Step 4: Preparing Data For modeling
