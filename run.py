@@ -70,9 +70,29 @@ type_accuracy = accuracy_score(y_test['type'], type_pred)
 print(f"Accuracy for Type: {type_accuracy}")
 
 # Step 7: Visualization
-print("Step 7: Visualization")
+
+# Adjust 'y_test' amounts based on type
+y_test_adjusted = y_test.copy()
+y_test_adjusted['adjusted_amount'] = np.where(y_test_adjusted['type'] == 'credit', y_test_adjusted['amount'], -y_test_adjusted['amount'])
+
+# Adjust 'amount_pred' based on predicted types
+amount_pred_adjusted = np.where(type_pred == 'credit', amount_pred, -amount_pred)
+
+# Convert 'amount_pred_adjusted' from a numpy array to a pandas Series with the same datetime index as 'y_test['amount']'
+amount_pred_series_adjusted = pd.Series(amount_pred_adjusted, index=y_test['amount'].index)
+
+# Now we can resample because 'amount_pred_series_adjusted' is a pandas Series with a datetime index
+monthly_predicted_adjusted = amount_pred_series_adjusted.resample('M').sum()
+
+# Group the actual adjusted amounts by month
+monthly_actual_adjusted = y_test_adjusted['adjusted_amount'].resample('M').sum()
+
+# Plotting
 plt.figure(figsize=(10, 5))
-plt.plot(y_test['amount'].index, y_test['amount'], label='Actual Amount')
-plt.plot(y_test['amount'].index, amount_pred, label='Predicted Amount', linestyle='--')
+plt.plot(monthly_actual_adjusted.index, monthly_actual_adjusted, label='Actual Adjusted Amount')
+plt.plot(monthly_predicted_adjusted.index, monthly_predicted_adjusted, label='Predicted Adjusted Amount', linestyle='--')
+plt.title('Monthly Actual vs Predicted Adjusted Amounts')
+plt.xlabel('Month')
+plt.ylabel('Adjusted Amount')
 plt.legend()
 plt.show()

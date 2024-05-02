@@ -16,7 +16,7 @@ debitPrices = [700, 800]
 payments = []
 
 # Generate payments for each month of each year from 2019 to 2022
-for year in range(2015, 2024):
+for year in range(2023, 2024):
     for month in range(1, 13):
         num_debit_payments = 15  # Fixed number for all months
         # Generate debit payments
