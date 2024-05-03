@@ -18,7 +18,8 @@ try:
     headers = list(payments[0].keys())
 
     # Define headers for CSV columns
-    fieldnames = ["amount", "method", "status", "type", "createdAt"]
+    # fieldnames = ["amount", "method", "status", "type", "createdAt"]
+    fieldnames = ["amount", "status", "type", "createdAt"]
 
     # Write payments data to CSV file
     with open(output_file, "w", newline="") as csvfile:
@@ -31,7 +32,7 @@ try:
         for payment in payments:
             writer.writerow({
                 "amount": payment["amount"],
-                "method": payment["method"],
+                # "method": payment["method"],
                 "status": payment["status"],
                 "type": payment["type"],
                 "createdAt": payment["createdAt"]

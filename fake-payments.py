@@ -9,14 +9,13 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 fake = Faker()
 
-methods = ['cheque', 'cash', 'flouci', 'credit_card', 'other']
 types = ['debit', 'credit']
 creditPrices = [400, 500]
 debitPrices = [700, 800]
 payments = []
 
 # Generate payments for each month of each year from 2019 to 2022
-for year in range(2023, 2024):
+for year in range(2010, 2024):
     for month in range(1, 13):
         num_debit_payments = 15  # Fixed number for all months
         # Generate debit payments
@@ -26,7 +25,6 @@ for year in range(2023, 2024):
             payment = {
                 # "amount": random.randint(700, 800),  # Amount between 500 and 700 for debit payments
                 "amount": random.choice(debitPrices),
-                "method": random.choice(methods),
                 "status": "verified",
                 "type": "debit",
                 "createdAt": date_time.isoformat()
@@ -42,7 +40,6 @@ for year in range(2023, 2024):
                 payment = {
                     # "amount": random.randint(400, 500),  # Amount between 300 and 500 for credit payments
                     "amount": random.choice(creditPrices),
-                    "method": random.choice(methods),
                     "status": "verified",
                     "type": "credit",
                     "createdAt": date_time.isoformat()
@@ -65,7 +62,7 @@ for year in range(2023, 2024):
         total_debit = sum(payment["amount"] for payment in payments if payment["type"] == "debit" and payment["createdAt"].startswith(f"{year}-{month:02d}"))
         print(f"{year}-{month:02d}: Total credit payments: {total_credit}, Total debit payments: {total_debit}")
 
-
+payments.sort(key=lambda x: datetime.fromisoformat(x["createdAt"]))
 # Define the output file path
 output_file = "fake_payments.json"
 

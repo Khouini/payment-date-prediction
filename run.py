@@ -55,6 +55,20 @@ type_classifier = Pipeline([
 amount_regressor.fit(X_train, y_train['amount'])
 type_classifier.fit(X_train, y_train['type'])
 
+# Save models
+import pickle
+
+with open('amount_regressor.pkl', 'wb') as f:
+    pickle.dump(amount_regressor, f)
+with open('type_classifier.pkl', 'wb') as f:
+    pickle.dump(type_classifier, f)
+
+# Load models
+with open('amount_regressor.pkl', 'rb') as f:
+    loaded_amount_regressor = pickle.load(f)
+with open('type_classifier.pkl', 'rb') as f:
+    loaded_type_classifier = pickle.load(f)
+
 # Step 6: Evaluate Models
 print("Step 6: Evaluating Models")
 # Predictions
@@ -73,10 +87,12 @@ print(f"Accuracy for Type: {type_accuracy}")
 
 # Adjust 'y_test' amounts based on type
 y_test_adjusted = y_test.copy()
-y_test_adjusted['adjusted_amount'] = np.where(y_test_adjusted['type'] == 'credit', y_test_adjusted['amount'], -y_test_adjusted['amount'])
+# y_test_adjusted['adjusted_amount'] = np.where(y_test_adjusted['type'] == 'credit', y_test_adjusted['amount'], -y_test_adjusted['amount'])
+y_test_adjusted['adjusted_amount'] = y_test_adjusted['amount']
 
 # Adjust 'amount_pred' based on predicted types
-amount_pred_adjusted = np.where(type_pred == 'credit', amount_pred, -amount_pred)
+# amount_pred_adjusted = np.where(type_pred == 'credit', amount_pred, -amount_pred)
+amount_pred_adjusted = amount_pred
 
 # Convert 'amount_pred_adjusted' from a numpy array to a pandas Series with the same datetime index as 'y_test['amount']'
 amount_pred_series_adjusted = pd.Series(amount_pred_adjusted, index=y_test['amount'].index)
@@ -84,8 +100,10 @@ amount_pred_series_adjusted = pd.Series(amount_pred_adjusted, index=y_test['amou
 # Now we can resample because 'amount_pred_series_adjusted' is a pandas Series with a datetime index
 monthly_predicted_adjusted = amount_pred_series_adjusted.resample('M').sum()
 
+print('Monthly Predicted Adjusted Amounts:', monthly_predicted_adjusted)
 # Group the actual adjusted amounts by month
 monthly_actual_adjusted = y_test_adjusted['adjusted_amount'].resample('M').sum()
+print('Monthly Actual Adjusted Amounts:', monthly_actual_adjusted)
 
 # Plotting
 plt.figure(figsize=(10, 5))
