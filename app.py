@@ -1,58 +1,44 @@
-from flask import Flask, request, jsonify
-import pickle
+from flask import Flask, jsonify
 import pandas as pd
-import numpy as np
+from prophet import Prophet
+import joblib
 
 app = Flask(__name__)
 
-# Load your machine learning models
-with open('amount_regressor.pkl', 'rb') as f:
-    loaded_amount_regressor = pickle.load(f)
-with open('type_classifier.pkl', 'rb') as f:
-    loaded_type_classifier = pickle.load(f)
+# Load Prophet models
+model_credits = joblib.load('model_credits.pkl')
+model_debits = joblib.load('model_debits.pkl')
 
-@app.route('/predict', methods=['GET'])
-def predict():
-    # Extract date range from query parameters
-    start_date = request.args.get('start_date', type=pd.Timestamp)
-    end_date = request.args.get('end_date', type=pd.Timestamp)
-
-    df = pd.read_csv('fake_payments.csv')
-    # Generate or load your data here according to the date range
-    # For demonstration, we'll assume you have a DataFrame 'df' loaded and filtered by date range
-    df_filtered = df[(df['createdAt'] >= start_date) & (df['createdAt'] <= end_date)]
-
-    # Perform predictions
-    amount_pred = loaded_amount_regressor.predict(df_filtered)
-    type_pred = loaded_type_classifier.predict(df_filtered)
-
-    # Adjust predictions based on type
-    amount_pred_adjusted = np.where(type_pred == 'credit', amount_pred, -amount_pred)
-
-    # Convert predictions to pandas Series and group by month
-    amount_pred_series_adjusted = pd.Series(amount_pred_adjusted, index=df_filtered['createdAt'].index)
-    monthly_predicted_adjusted = amount_pred_series_adjusted.resample('M').sum()
-
-    # Group the actual amounts by month and adjust
-    y_test_adjusted = df_filtered.copy()
-    y_test_adjusted['adjusted_amount'] = np.where(y_test_adjusted['type'] == 'credit', y_test_adjusted['amount'], -y_test_adjusted['amount'])
-    monthly_actual_adjusted = y_test_adjusted['adjusted_amount'].resample('M').sum()
-
-    # Create the response dictionary
-    response_dict = {}
-    for date in monthly_actual_adjusted.index:
-        month_str = date.strftime('%Y-%m')
-        response_dict[month_str] = {
-            "actual_total": monthly_actual_adjusted[date],
-            "predicted_total": monthly_predicted_adjusted[date],
-            "details": {
-                "actual_payments": y_test_adjusted['amount'][y_test_adjusted.index.month == date.month].tolist(),
-                "predicted_payments": amount_pred_series_adjusted[amount_pred_series_adjusted.index.month == date.month].tolist()
-            }
-        }
-
-    return jsonify(response_dict)
+@app.route('/get_balance', methods=['GET'])
+def get_balance():
+    # Load historical data
+    merged_data = pd.read_json("merged_data.json", convert_dates=['ds'])  # Ensure dates are converted
+    
+    # Predict future credits and debits
+    future_credits = model_credits.make_future_dataframe(periods=12, freq='M')
+    future_debits = model_debits.make_future_dataframe(periods=12, freq='M')
+    
+    forecast_credits = model_credits.predict(future_credits)
+    forecast_debits = model_debits.predict(future_debits)
+    
+    # Calculate forecast balance
+    forecast_credits['forecast_debits'] = forecast_debits['yhat']
+    forecast_credits['predicted_balance'] = forecast_credits['yhat'] - forecast_credits['forecast_debits']
+    
+    # Calculate actual balance from historical data
+    merged_data['actual_balance'] = merged_data['y_credit'] - merged_data['y_debit']
+    
+    # Ensure the 'ds' column is datetime and format it
+    if merged_data['ds'].dtype != 'datetime64[ns]':
+        merged_data['ds'] = pd.to_datetime(merged_data['ds'])
+    merged_data['month'] = merged_data['ds'].dt.strftime('%m:%Y')
+    forecast_credits['month'] = forecast_credits['ds'].dt.strftime('%m:%Y')
+    
+    # Convert to JSON with modified month format
+    actual_balance_json = merged_data[['month', 'actual_balance']].to_json(orient='records')
+    predicted_balance_json = forecast_credits[['month', 'predicted_balance']].to_json(orient='records')
+    
+    return jsonify(actual_balance=actual_balance_json, predicted_balance=predicted_balance_json)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
-

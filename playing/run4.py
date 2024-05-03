@@ -96,3 +96,14 @@ print("Root Mean Squared Error (RMSE):", rmse)
 
 # Calculate Root Mean Squared Error (RMSE)
 # Root Mean Squared Error (RMSE) is like the "easy-to-read" version of MSE. It's the square root of the MSE, so it gives you the average size of the errors in the same units as the original data. For example, if you're predicting prices in dollars, RMSE will tell you, on average, how many dollars your predictions are off by. Lower RMSE values indicate better performance.
+
+# R-squared: 0.9999175079851397
+# Mean Squared Error (MSE): 93044.63458749463
+# Root Mean Squared Error (RMSE): 305.03218615007603
+# which is great which not
+
+# With an R-squared value very close to 1 (0.9999), it suggests that the model explains almost all of the variance in the actual balance. This indicates an excellent fit between the predicted and actual values, meaning the model captures the underlying patterns in the data very well.
+
+# Regarding the Mean Squared Error (MSE) and Root Mean Squared Error (RMSE), both values are relatively low. The MSE value of 93044.63 suggests that, on average, the squared difference between the predicted and actual balances is around 93044.63. The RMSE value of 305.03, being the square root of MSE, indicates that, on average, the model's predictions are off by approximately 305 units of the same scale as the actual balance.
+
+# In summary, based on these evaluation metrics, the model performs exceptionally well in predicting the balance. However, it's always recommended to consider the context of the problem domain and compare these values against other models or benchmarks to get a comprehensive understanding of the model's performance.
